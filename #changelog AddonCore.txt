@@ -1,0 +1,8 @@
+
+29.01.2022 (DD/MM/YYYY) 0.1.1
+	
+	Fixed
+		- __netcode_Addon_RecvPackages() not returning the received bytes if the socket disconnected
+		
+	Added
+		- support for the overhauled _netcode_Proxy.au3 UDF version

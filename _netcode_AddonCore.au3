@@ -9,7 +9,7 @@
 #ce
 
 
-Global $__net_Addon_sAddonVersion = "0.1"
+Global $__net_Addon_sAddonVersion = "0.1.1"
 Global $__net_Addon_sNetcodeTestedVersion = "0.1.5.24"
 Global $__net_Addon_bLogToConsole = True
 
@@ -121,7 +121,7 @@ EndIf
 
 					; if we received something and then the disconnect happend then return the package first
 					; otherwise we would loose that data
-					if $sPackages <> "" Then Return $sPackages
+					if $sPackages <> "" Then Return SetExtended($nLen, $sPackages)
 
 					Return SetError(1, 0, False)
 
@@ -219,6 +219,101 @@ EndIf
 
 
 			Case 1 ; proxy
+
+				$sText = "Proxy "
+
+				Switch $nCode
+
+					Case 1 ; proxy startup
+						$sText &= "successfully started"
+
+					Case 2 ; proxy shutdown
+						$sText &= "successfully shutdown"
+
+					Case 3 ; created middleman
+						$sText &= "successfully created middleman with ID: " & $vData & " at position " & $vData2
+
+					Case 4 ; could not create middleman
+						$sText &= "could not create middleman with ID: " & $vData & " at position " & $vData2
+
+					Case 5 ; removed middleman
+						$sText &= "removed middleman with ID: " & $vData
+
+					Case 6 ; created proxy
+						$sText &= "successfully created proxy parent @ socket " & $vData & " with middleman ID: " & $vData2
+
+					Case 7 ; could not create proxy
+						$sText &= "Error: $sConOrDest_MiddlemanID needs to be Connect or Destination but is " & $vData
+
+					Case 8 ; could not start listener
+						$sText &= "Error: Could not start proxy at: " & $vData
+
+					Case 9 ; closed proxy
+						$sText &= "successfully closed proxy parent @ socket " & $vData
+
+					Case 10 ; set middleman
+						$sText &= "successfully set middleman " & $vData & " at position " & $vData2
+
+					Case 11 ; could not set middleman
+						$sText &= "Error: Middleman with ID: " & $vData & " doesnt exist"
+
+					; reserved
+
+
+					Case 20 ; could not call connect middleman
+						$sText &= "Error: Could not call connect middleman with ID: " & $vData
+
+					Case 21 ; new incoming
+						$sText &= "new connection from IP: " & __netcode_Addon_SocketToIP($vData)
+
+					Case 22 ; no destination middleman
+						$sText &= "Error: No destination middleman for proxy parent @ socket: " & $vData
+
+					Case 23 ; the incoming connection disconnected
+						$sText &= "The incoming connection disconnected from IP: " & __netcode_Addon_SocketToIP($vData)
+
+					Case 24 ; the destination middleman call failed
+						$sText &= "Error: The destination middleman with ID: " & $vData & " failed to call for proxy parent @ socket: " & $vData2
+
+					Case 25 ; invalid destination middleman return
+						$sText &= "Error: Invalid destination middleman return with ID: " & $vData & " for proxy parent @ socket: " & $vData2
+
+					Case 26 ; incoming destination timeout
+						$sText &= "incoming connection destination evaluation timeout. IP: " & __netcode_Addon_SocketToIP($vData)
+
+					; reserved
+
+					Case 30 ; middleman returned array to small
+						$sText &= "Error: Middleman with ID: " & $vData & " returned to small destination array for proxy parent @ socket: " & $vData2
+
+					Case 31 ; invalid array
+						$sText &= "Error: Middleman with ID: " & $vData & " returned data for the incoming socket but forgot to set the When to send toggle"
+
+					Case 32 ; connecting
+						$sText &= "connecting to destination: " & $vData
+
+					Case 33 ; successfully connected
+						$sText &= "successfully connected IP: " & __netcode_Addon_SocketToIP($vData) & " with IP: " & __netcode_Addon_SocketToIP($vData2)
+
+					Case 34 ; connect attempt timeouted
+						$sText &= "connect attempt timeouted for IP: " & __netcode_Addon_SocketToIP($vData)
+
+					Case 35 ; send
+						$sText &= "send " & Round($vData3 / 1024, 2) & " KB" & @TAB & @TAB & "from IP: " & __netcode_Addon_SocketToIP($vData) & " to IP: " & __netcode_Addon_SocketToIP($vData2)
+
+					Case 36 ; data forward successfully rejected
+						$sText &= "middleman with ID: " & $vData3 & " successfully rejected data relay from IP: " & __netcode_Addon_SocketToIP($vData) & " to IP: " & __netcode_Addon_SocketToIP($vData2)
+
+					; reserved
+
+					Case 99 ; disconnected
+						$sText &= "disconnected from IP: " & __netcode_Addon_SocketToIP($vData)
+
+					Case 100 ; custom
+						$sText &= $vData
+
+
+				EndSwitch
 
 
 			Case 2 ; router
