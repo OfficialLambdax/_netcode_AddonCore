@@ -1,3 +1,10 @@
+30.01.2022 (DD/MM/YYYY) 0.1.2
+	
+	Changes
+		- Moved Addon code to the AddonCore so that other Addons can easier use the code.
+		
+		- Also standardtized some, not all, functions, so that less conflicts can arise.
+
 
 29.01.2022 (DD/MM/YYYY) 0.1.1
 	
