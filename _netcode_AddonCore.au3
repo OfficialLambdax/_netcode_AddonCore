@@ -9,9 +9,12 @@
 #ce
 
 
-Global $__net_Addon_sAddonVersion = "0.1.2"
-Global $__net_Addon_sNetcodeTestedVersion = "0.1.5.24"
+Global $__net_Addon_sAddonVersion = "0.1.2.1"
+Global $__net_Addon_sNetcodeTestedVersion = "0.1.5.25"
 Global $__net_Addon_bLogToConsole = True
+Global Const $__net_Addon_sNetcodeOfficialRepositoryURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF"
+Global Const $__net_Addon_sNetcodeOfficialRepositoryChangelogURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF/blob/main/%23changelog%20AddonCore.txt"
+Global Const $__net_Addon_sNetcodeVersionURL = "https://raw.githubusercontent.com/OfficialLambdax/_netcode-UDF/main/versions/_netcode_AddonCore.version"
 
 If $__net_Addon_sNetcodeTestedVersion <> $__net_sNetcodeVersion Then
 	ConsoleWrite("! _netcode Warning ! Potential incompatibility detected" & @CRLF)
@@ -22,6 +25,7 @@ If $__net_Addon_sNetcodeTestedVersion <> $__net_sNetcodeVersion Then
 	ConsoleWrite("+ This is no fatal error. So your script wont be halted." & @CRLF & @CRLF)
 EndIf
 
+__netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcodeOfficialRepositoryURL, $__net_Addon_sNetcodeOfficialRepositoryChangelogURL, '_netcode_AddonCore', $__net_Addon_sAddonVersion)
 
 #Region
 	; General functions
