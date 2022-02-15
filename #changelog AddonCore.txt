@@ -1,3 +1,7 @@
+15.02.2022 (DD/MM/YYYY) 0.1.2.2
+
+	Compatible patch for the latest _netcode_Core.au3 release
+
 30.01.2022 (DD/MM/YYYY) 0.1.2.1
 
 	Added

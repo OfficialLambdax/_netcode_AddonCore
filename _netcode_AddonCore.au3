@@ -9,8 +9,8 @@
 #ce
 
 
-Global $__net_Addon_sAddonVersion = "0.1.2.1"
-Global $__net_Addon_sNetcodeTestedVersion = "0.1.5.25"
+Global $__net_Addon_sAddonVersion = "0.1.2.2"
+Global $__net_Addon_sNetcodeTestedVersion = "0.1.5.26"
 Global $__net_Addon_bLogToConsole = True
 Global Const $__net_Addon_sNetcodeOfficialRepositoryURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryChangelogURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF/blob/main/%23changelog%20AddonCore.txt"
@@ -32,17 +32,17 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 	; $nID could be a name, socket or what so ever
 	Func __netcode_Addon_SetVar(Const $nID, $sName, $vData)
-		_storageS_Overwrite($nID, '_netcode_Addon_' & $sName, $vData)
+		_storageG_Overwrite($nID, '_netcode_Addon_' & $sName, $vData)
 	EndFunc
 
 	Func __netcode_Addon_GetVar(Const $nID, $sName)
-		Return _storageS_Read($nID, '_netcode_Addon_' & $sName)
+		Return _storageG_Read($nID, '_netcode_Addon_' & $sName)
 	EndFunc
 
 	; creates an empty 1D storage array. $nID could be a parent socket or a route name
 	Func __netcode_Addon_CreateSocketList(Const $nID)
 		Local $arSockets[0]
-		_storageS_Overwrite($nID, '_netcode_Addon_SocketList', $arSockets)
+		_storageG_Overwrite($nID, '_netcode_Addon_SocketList', $arSockets)
 	EndFunc
 
 	; disconnects all sockets and cleans the vars
@@ -53,18 +53,18 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 		Local $nArSize = UBound($arSockets)
 		For $i = 0 To $nArSize - 1
 			__netcode_TCPCloseSocket($arSockets[$i])
-			_storageS_TidyGroupVars($arSockets[$i])
+			_storageG_TidyGroupVars($arSockets[$i])
 		Next
 
-		_storageS_TidyGroupVars($nID)
+		_storageG_TidyGroupVars($nID)
 	EndFunc
 
 	Func __netcode_Addon_SetSocketList(Const $nID, $arSockets)
-		_storageS_Overwrite($nID, '_netcode_Addon_SocketList', $arSockets)
+		_storageG_Overwrite($nID, '_netcode_Addon_SocketList', $arSockets)
 	EndFunc
 
 	Func __netcode_Addon_GetSocketList(Const $nID)
-		Return _storageS_Read($nID, '_netcode_Addon_SocketList')
+		Return _storageG_Read($nID, '_netcode_Addon_SocketList')
 	EndFunc
 
 	; adds the socket to the socket list
@@ -503,7 +503,7 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 		__netcode_Addon_RemoveFromOutgoingSocketList($hSocket, $hRemoveSocket)
 		__netcode_Addon_RemoveFromRelaySocketList($hSocket, $hRemoveSocket)
 
-		_storageS_TidyGroupVars($hRemoveSocket)
+		_storageG_TidyGroupVars($hRemoveSocket)
 
 	EndFunc
 
@@ -537,7 +537,7 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 		EndFunc
 
 		Func __netcode_Addon_RemoveMiddleman($sID, $nAddonID)
-			_storageS_TidyGroupVars($sID)
+			_storageG_TidyGroupVars($sID)
 			__netcode_Addon_Log(1, 5, $nAddonID)
 		EndFunc
 
@@ -976,8 +976,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 						__netcode_Addon_RemoveFromSocketList($hSocket & '_OutgoingPending', $hOutgoingSocket)
 
 						; tidy both socket vars
-						_storageS_TidyGroupVars($arClients[$i])
-						_storageS_TidyGroupVars($hOutgoingSocket)
+						_storageG_TidyGroupVars($arClients[$i])
+						_storageG_TidyGroupVars($hOutgoingSocket)
 
 				EndSwitch
 
@@ -1053,8 +1053,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 					__netcode_Addon_RemoveFromIncomingSocketList($hSocket, $hIncomingSocket)
 
 					; tidy both
-					_storageS_TidyGroupVars($arClients[$i])
-					_storageS_TidyGroupVars($hIncomingSocket)
+					_storageG_TidyGroupVars($arClients[$i])
+					_storageG_TidyGroupVars($hIncomingSocket)
 
 					__netcode_Addon_Log($nAddonID, 15, $hIncomingSocket)
 
@@ -1109,8 +1109,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 					__netcode_Addon_RemoveFromRelaySocketList($hSocket, $arClients[$i])
 					__netcode_Addon_RemoveFromRelaySocketList($hSocket, $hLinkSocket)
 
-					_storageS_TidyGroupVars($arClients[$i])
-					_storageS_TidyGroupVars($hLinkSocket)
+					_storageG_TidyGroupVars($arClients[$i])
+					_storageG_TidyGroupVars($hLinkSocket)
 
 					__netcode_Addon_Log($nAddonID, 15, $arClients[$i])
 					__netcode_Addon_Log($nAddonID, 15, $hLinkSocket)
