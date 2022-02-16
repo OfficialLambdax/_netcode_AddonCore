@@ -6,12 +6,18 @@
 	This UDF does nothing byitself. It just provides code for various Addons
 	of the _netcode UDF.
 
+	Currently only for the Relay, Proxy and Router UDF.
+
 #ce
 
 
-Global $__net_Addon_sAddonVersion = "0.1.2.2"
-Global $__net_Addon_sNetcodeTestedVersion = "0.1.5.26"
-Global $__net_Addon_bLogToConsole = True
+Global $__net_Addon_bLogToConsole = True ; global toggle
+Global $__net_Addon_bRelayLogToConsole = True
+Global $__net_Addon_bProxyLogToConsole = True
+Global $__net_Addon_bRouterLogToConsole = True
+
+Global Const $__net_Addon_sAddonVersion = "0.1.2.3"
+Global Const $__net_Addon_sNetcodeTestedVersion = "0.1.5.26"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryChangelogURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF/blob/main/%23changelog%20AddonCore.txt"
 Global Const $__net_Addon_sNetcodeVersionURL = "https://raw.githubusercontent.com/OfficialLambdax/_netcode-UDF/main/versions/_netcode_AddonCore.version"
@@ -29,6 +35,28 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 #Region
 	; General functions
+
+	Func __netcode_Addon_SetLogging($nAddonID, $bSet)
+
+;~ 		If Not IsBool($bSet) Then Return
+
+		Switch $nAddonID
+
+			Case -1 ; global
+				$__net_Addon_bLogToConsole = $bSet
+
+			Case 0 ; relay
+				$__net_Addon_bRelayLogToConsole = $bSet
+
+			Case 1 ; proxy
+				$__net_Addon_bProxyLogToConsole = $bSet
+
+			Case 2 ; router
+				$__net_Addon_bRouterLogToConsole = $bSet
+
+		EndSwitch
+
+	EndFunc
 
 	; $nID could be a name, socket or what so ever
 	Func __netcode_Addon_SetVar(Const $nID, $sName, $vData)
@@ -171,6 +199,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 			Case 0 ; relay
 
+				If Not $__net_Addon_bRelayLogToConsole Then Return
+
 				$sText = "Relay "
 
 				Switch $nCode
@@ -223,6 +253,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 
 			Case 1 ; proxy
+
+				If Not $__net_Addon_bProxyLogToConsole Then Return
 
 				$sText = "Proxy "
 
@@ -324,6 +356,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 
 			Case 2 ; router
+
+				If Not $__net_Addon_bRouterLogToConsole Then Return
 
 				$sText = "Router "
 
@@ -580,7 +614,7 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 				EndIf
 			EndIf
 
-			; add to IncomingPending list if not destination is yet set
+			; add to IncomingPending list if no destination is yet set
 			If IsArray($vMiddlemanReturn) Then
 				__netcode_Addon_ConnectOutgoingMiddleman($hSocket, $hIncomingSocket, $vMiddlemanReturn, $sID, 1)
 			ElseIf $vMiddlemanReturn == False Then ; must be == because If "" = False Then is True
@@ -603,92 +637,118 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 			$arClients = __netcode_SocketSelect($arClients, True)
 			$nArSize = UBound($arClients)
 
-			If $nArSize = 0 Then Return
-
 			Local $sID = "", $sCallback = "", $vMiddlemanReturn, $sPackage = "", $hTimer = 0
 
-			; for each incoming pending client
-			; note: each socket could have a different middleman set to it, so have to read it for each socket instead of just once
-			For $i = 0 To $nArSize - 1
+			If $nArSize > 0 Then
 
-				; get destination callback
-				$sCallback = __netcode_Addon_GetVar(__netcode_Addon_GetVar($arClients[$i], 'Destination'), 'Callback')
+				; for each incoming pending client
+				; note: each socket could have a different middleman set to it, so have to read it for each socket instead of just once
+				For $i = 0 To $nArSize - 1
 
-				; if there is none then disconnect and remove the socket
-				If Not $sCallback Then
-					__netcode_Addon_Log($nAddonID, 22, $hSocket)
-					__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
-					ContinueLoop
-				EndIf
+					; get destination callback
+					$sCallback = __netcode_Addon_GetVar(__netcode_Addon_GetVar($arClients[$i], 'Destination'), 'Callback')
 
-				; check the recv buffer
-				$sPackage = __netcode_Addon_RecvPackages($arClients[$i])
-
-				; if the incoming connection disconnected
-				if @error Then
-					__netcode_Addon_Log($nAddonID, 23, $arClients[$i])
-					__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
-					ContinueLoop
-				EndIf
-
-				; if we didnt receive anything
-				if Not @extended Then
-
-					; check destination evaluation timeout
-					$hTimer = __netcode_Addon_GetVar($arClients[$i], 'TimeoutTimer')
-
-					If TimerDiff($hTimer) > 2000 Then ; needs to become setable
-						__netcode_Addon_Log($nAddonID, 26, $arClients[$i])
+					; if there is none then disconnect and remove the socket
+					If Not $sCallback Then
+						__netcode_Addon_Log($nAddonID, 22, $hSocket)
 						__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
 						ContinueLoop
 					EndIf
 
+					; check the recv buffer
+					$sPackage = __netcode_Addon_RecvPackages($arClients[$i])
 
-					ContinueLoop
-				EndIf
-
-				; run the callback if we received something
-				$vMiddlemanReturn = Call($sCallback, $arClients[$i], 'Destination', $sPackage)
-
-				; if the call failed
-				if @error Then
-					__netcode_Addon_Log($nAddonID, 24, __netcode_Addon_GetVar($arClients[$i], 'Destination'), $hSocket)
-					__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
-					ContinueLoop
-				EndIf
-
-				; check return
-				If IsArray($vMiddlemanReturn) Then ; if destination is given
-
-					; connect outgoing
-					__netcode_Addon_ConnectOutgoingMiddleman($hSocket, $arClients[$i], $vMiddlemanReturn, __netcode_Addon_GetVar($arClients[$i], 'Destination'), $nAddonID)
-
-					; remove from incoming pending list
-					__netcode_Addon_RemoveFromIncomingSocketList($hSocket, $arClients[$i])
-
-				ElseIf $vMiddlemanReturn = False Then ; if the middleman says to disconnect
-
-					__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
-
-				ElseIf $vMiddlemanReturn = Null Then ; if no destination is known yet
-
-					; check destination evaluation timeout
-					$hTimer = __netcode_Addon_GetVar($arClients[$i], 'TimeoutTimer')
-
-					If TimerDiff($hTimer) > 2000 Then ; needs to become setable
-						__netcode_Addon_Log($nAddonID, 26, $arClients[$i])
+					; if the incoming connection disconnected
+					if @error Then
+						__netcode_Addon_Log($nAddonID, 23, $arClients[$i])
 						__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
+						ContinueLoop
 					EndIf
 
-		;~ 			__netcode_Addon_Log(1, 26, $arClients[$i])
+					; if we didnt receive anything
+					if Not @extended Then ContinueLoop
+;~ 					if Not @extended Then
 
-				Else ; invalid return
+						; check destination evaluation timeout
+;~ 						$hTimer = __netcode_Addon_GetVar($arClients[$i], 'TimeoutTimer')
 
-					; log to console
-					__netcode_Addon_Log($nAddonID, 25, __netcode_Addon_GetVar($arClients[$i], 'Destination'), $hSocket)
+;~ 						If TimerDiff($hTimer) > 2000 Then ; needs to become setable
+;~ 							__netcode_Addon_Log($nAddonID, 26, $arClients[$i])
+;~ 							__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
+;~ 							ContinueLoop
+;~ 						EndIf
 
+;~ 						ContinueLoop
+;~ 					EndIf
+
+					; run the callback if we received something
+					$vMiddlemanReturn = Call($sCallback, $arClients[$i], 'Destination', $sPackage)
+
+					; if the call failed
+					if @error Then
+						__netcode_Addon_Log($nAddonID, 24, __netcode_Addon_GetVar($arClients[$i], 'Destination'), $hSocket)
+						__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
+						ContinueLoop
+					EndIf
+
+					; check return
+					If IsArray($vMiddlemanReturn) Then ; if destination is given
+
+						; connect outgoing
+						__netcode_Addon_ConnectOutgoingMiddleman($hSocket, $arClients[$i], $vMiddlemanReturn, __netcode_Addon_GetVar($arClients[$i], 'Destination'), $nAddonID)
+
+						; remove from incoming pending list
+						__netcode_Addon_RemoveFromIncomingSocketList($hSocket, $arClients[$i])
+
+						ContinueLoop
+
+					ElseIf $vMiddlemanReturn = False Then ; if the middleman says to disconnect
+
+						__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
+
+						ContinueLoop
+
+					ElseIf $vMiddlemanReturn = Null Then ; if no destination is known yet
+
+						; check destination evaluation timeout
+;~ 						$hTimer = __netcode_Addon_GetVar($arClients[$i], 'TimeoutTimer')
+
+;~ 						If TimerDiff($hTimer) > 2000 Then ; needs to become setable
+;~ 							__netcode_Addon_Log($nAddonID, 26, $arClients[$i])
+;~ 							__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
+;~ 						EndIf
+
+						ContinueLoop
+
+					Else ; invalid return
+
+						; log to console
+						__netcode_Addon_Log($nAddonID, 25, __netcode_Addon_GetVar($arClients[$i], 'Destination'), $hSocket)
+
+						__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
+
+						ContinueLoop
+
+					EndIf
+
+				Next
+
+			EndIf
+
+			; reread the incoming pending list
+			Local $arClients = __netcode_Addon_GetIncomingSocketList($hSocket)
+			Local $nArSize = UBound($arClients)
+
+			; if none are left then return
+			if $nArSize == 0 Then Return
+
+			; otherwise check all for their timeouts
+			For $i = 0 To $nArSize - 1
+
+				$hTimer = __netcode_Addon_GetVar($arClients[$i], 'TimeoutTimer')
+				If TimerDiff($hTimer) > 2000 Then
+					__netcode_Addon_Log($nAddonID, 26, $arClients[$i])
 					__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
-
 				EndIf
 
 			Next
@@ -697,8 +757,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 		Func __netcode_Addon_ConnectOutgoingMiddleman(Const $hSocket, $hIncomingSocket, $arDestination, $sID, $nAddonID)
 
 			; $arDestination
-			; [0] = IP
-			; [1] = Port
+			; [0] = IP or Socket
+			; [1] = Port or Empty
 			; [2] = Send to outgoing (needs to be of type string)
 			; [3] = Send to incoming (needs to be of type string)
 			; [4] = True / False (True = Send when outgoing is connected, False = Send imidiatly)
@@ -716,7 +776,11 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 				Return
 			EndIf
 
-			Local $hOutgoingSocket = __netcode_TCPConnect($arDestination[0], $arDestination[1], 2, True)
+			if $arDestination[1] == "" Then
+				Local $hOutgoingSocket = $arDestination[0]
+			Else
+				Local $hOutgoingSocket = __netcode_TCPConnect($arDestination[0], $arDestination[1], 2, True)
+			EndIf
 
 			__netcode_Addon_Log($nAddonID, 32, $arDestination[0] & ':' & $arDestination[1])
 
@@ -883,7 +947,7 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 					; get middleman callback
 					$sCallback = __netcode_Addon_GetVar(__netcode_Addon_GetVar($hLinkSocket, 'Between'), 'Callback')
 					If $sCallback Then
-						$sData = Call($sCallback, $hLinkSocket, $arClients[$i], __netcode_Addon_GetSocketType($hLinkSocket), $sData)
+						$sData = Call($sCallback, $hLinkSocket, $arClients[$i], __netcode_Addon_GetSocketType($hLinkSocket), $sData, $nLen)
 
 						; if either the call failed or if the middleman sais it doesnt want to forward the packet
 						if @error Then
