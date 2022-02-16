@@ -16,7 +16,7 @@ Global $__net_Addon_bRelayLogToConsole = True
 Global $__net_Addon_bProxyLogToConsole = True
 Global $__net_Addon_bRouterLogToConsole = True
 
-Global Const $__net_Addon_sAddonVersion = "0.1.2.3"
+Global Const $__net_Addon_sAddonVersion = "0.1.2.4"
 Global Const $__net_Addon_sNetcodeTestedVersion = "0.1.5.26"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryChangelogURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF/blob/main/%23changelog%20AddonCore.txt"
@@ -81,10 +81,10 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 		Local $nArSize = UBound($arSockets)
 		For $i = 0 To $nArSize - 1
 			__netcode_TCPCloseSocket($arSockets[$i])
-			_storageG_TidyGroupVars($arSockets[$i])
+			_storageG_DestroyGroup($arSockets[$i])
 		Next
 
-		_storageG_TidyGroupVars($nID)
+		_storageG_DestroyGroup($nID)
 	EndFunc
 
 	Func __netcode_Addon_SetSocketList(Const $nID, $arSockets)
@@ -537,7 +537,7 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 		__netcode_Addon_RemoveFromOutgoingSocketList($hSocket, $hRemoveSocket)
 		__netcode_Addon_RemoveFromRelaySocketList($hSocket, $hRemoveSocket)
 
-		_storageG_TidyGroupVars($hRemoveSocket)
+		_storageG_DestroyGroup($hRemoveSocket)
 
 	EndFunc
 
@@ -571,7 +571,7 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 		EndFunc
 
 		Func __netcode_Addon_RemoveMiddleman($sID, $nAddonID)
-			_storageG_TidyGroupVars($sID)
+			_storageG_DestroyGroup($sID)
 			__netcode_Addon_Log(1, 5, $nAddonID)
 		EndFunc
 
@@ -1002,54 +1002,6 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 		EndFunc
 
-		#cs
-		Func __netcode_Addon_CheckIncoming(Const $hSocket)
-
-			; get incoming socket list
-			Local $arClients = __netcode_Addon_GetSocketList($hSocket & '_IncomingPending')
-			if UBound($arClients) = 0 Then Return
-
-			; select
-			$arClients = __netcode_SocketSelect($arClients, True)
-			Local $nArSize = UBound($arClients)
-
-			If $nArSize = 0 Then Return
-
-			Local $hOutgoingSocket = 0
-
-			; for each select socket
-			For $i = 0 To $nArSize - 1
-
-				; check connection
-				__netcode_Addon_TCPRecv($arClients[$i], 1)
-
-				; if disconnected then
-				Switch @error
-
-					Case 1, 10050 To 10054
-
-						; get linked outgoing socket
-						$hOutgoingSocket = __netcode_Addon_GetVar($arClients[$i], 'Link')
-
-						; close both
-						__netcode_TCPCloseSocket($arClients[$i])
-						__netcode_TCPCloseSocket($hOutgoingSocket)
-
-						; remove the incoming and outgoing socket
-						__netcode_Addon_RemoveFromSocketList($hSocket & '_IncomingPending', $arClients[$i])
-						__netcode_Addon_RemoveFromSocketList($hSocket & '_OutgoingPending', $hOutgoingSocket)
-
-						; tidy both socket vars
-						_storageG_TidyGroupVars($arClients[$i])
-						_storageG_TidyGroupVars($hOutgoingSocket)
-
-				EndSwitch
-
-			Next
-
-		EndFunc
-		#ce
-
 		Func __netcode_Addon_CheckOutgoing(Const $hSocket, $nAddonID)
 
 			; get outgoing socket list
@@ -1117,8 +1069,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 					__netcode_Addon_RemoveFromIncomingSocketList($hSocket, $hIncomingSocket)
 
 					; tidy both
-					_storageG_TidyGroupVars($arClients[$i])
-					_storageG_TidyGroupVars($hIncomingSocket)
+					_storageG_DestroyGroup($arClients[$i])
+					_storageG_DestroyGroup($hIncomingSocket)
 
 					__netcode_Addon_Log($nAddonID, 15, $hIncomingSocket)
 
@@ -1173,8 +1125,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 					__netcode_Addon_RemoveFromRelaySocketList($hSocket, $arClients[$i])
 					__netcode_Addon_RemoveFromRelaySocketList($hSocket, $hLinkSocket)
 
-					_storageG_TidyGroupVars($arClients[$i])
-					_storageG_TidyGroupVars($hLinkSocket)
+					_storageG_DestroyGroup($arClients[$i])
+					_storageG_DestroyGroup($hLinkSocket)
 
 					__netcode_Addon_Log($nAddonID, 15, $arClients[$i])
 					__netcode_Addon_Log($nAddonID, 15, $hLinkSocket)
@@ -1206,37 +1158,5 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 #Region
 ; tcp functions. Cut from _netcode_Core.au3 for when they had to be modified
 
-
-#cs
-Func __netcode_Addon_TCPRecv(Const $hSocket, $nSize = 65536) ; 65536
-
-	Local $nError = 0
-	Local $tRecvBuffer = DllStructCreate("byte[" & $nSize & "]")
-
-	; every socket is already non blocking, but recv still blocks occassionally which is very bad. So i reset to non blockig mode
-	; until i figured why recv blocks while it shouldnt.
-	Local $arRet = DllCall($__net_hWs2_32, "int", "ioctlsocket", "int", $hSocket, "long", 0x8004667e, "ulong*", 1) ;FIONBIO
-
-	$arRet = DllCall($__net_hWs2_32, "int", "recv", "int", $hSocket, "ptr", DllStructGetPtr($tRecvBuffer), "int", $nSize, "int", 0)
-
-	; "If the connection has been gracefully closed, the return value is zero."
-	if $arRet[0] = 0 Then
-		Return SetError(1, 0, False)
-	EndIf
-
-	if $arRet[0] = -1 Then
-		$nError = __netcode_WSAGetLastError()
-		if $nError > 10000 Then ; "Error codes below 10000 are standard Win32 error codes"
-			if $nError <> 10035 Then
-				Return SetError($nError, 2, False)
-			EndIf
-		EndIf
-
-		Return ""
-	EndIf
-
-	Return SetError(0, $arRet[0], BinaryMid(DllStructGetData($tRecvBuffer, 1), 1, $arRet[0]))
-EndFunc
-#ce
 
 #EndRegion
