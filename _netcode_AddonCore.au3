@@ -16,7 +16,7 @@ Global $__net_Addon_bRelayLogToConsole = True
 Global $__net_Addon_bProxyLogToConsole = True
 Global $__net_Addon_bRouterLogToConsole = True
 
-Global Const $__net_Addon_sAddonVersion = "0.1.2.4"
+Global Const $__net_Addon_sAddonVersion = "0.1.2.5"
 Global Const $__net_Addon_sNetcodeTestedVersion = "0.1.5.26"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryChangelogURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF/blob/main/%23changelog%20AddonCore.txt"
@@ -60,17 +60,17 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 	; $nID could be a name, socket or what so ever
 	Func __netcode_Addon_SetVar(Const $nID, $sName, $vData)
-		_storageG_Overwrite($nID, '_netcode_Addon_' & $sName, $vData)
+		_storageGO_Overwrite($nID, '_netcode_Addon_' & $sName, $vData)
 	EndFunc
 
 	Func __netcode_Addon_GetVar(Const $nID, $sName)
-		Return _storageG_Read($nID, '_netcode_Addon_' & $sName)
+		Return _storageGO_Read($nID, '_netcode_Addon_' & $sName)
 	EndFunc
 
 	; creates an empty 1D storage array. $nID could be a parent socket or a route name
 	Func __netcode_Addon_CreateSocketList(Const $nID)
 		Local $arSockets[0]
-		_storageG_Overwrite($nID, '_netcode_Addon_SocketList', $arSockets)
+		_storageGO_Overwrite($nID, '_netcode_Addon_SocketList', $arSockets)
 	EndFunc
 
 	; disconnects all sockets and cleans the vars
@@ -81,18 +81,18 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 		Local $nArSize = UBound($arSockets)
 		For $i = 0 To $nArSize - 1
 			__netcode_TCPCloseSocket($arSockets[$i])
-			_storageG_DestroyGroup($arSockets[$i])
+			_storageGO_DestroyGroup($arSockets[$i])
 		Next
 
-		_storageG_DestroyGroup($nID)
+		_storageGO_DestroyGroup($nID)
 	EndFunc
 
 	Func __netcode_Addon_SetSocketList(Const $nID, $arSockets)
-		_storageG_Overwrite($nID, '_netcode_Addon_SocketList', $arSockets)
+		_storageGO_Overwrite($nID, '_netcode_Addon_SocketList', $arSockets)
 	EndFunc
 
 	Func __netcode_Addon_GetSocketList(Const $nID)
-		Return _storageG_Read($nID, '_netcode_Addon_SocketList')
+		Return _storageGO_Read($nID, '_netcode_Addon_SocketList')
 	EndFunc
 
 	; adds the socket to the socket list
@@ -537,7 +537,7 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 		__netcode_Addon_RemoveFromOutgoingSocketList($hSocket, $hRemoveSocket)
 		__netcode_Addon_RemoveFromRelaySocketList($hSocket, $hRemoveSocket)
 
-		_storageG_DestroyGroup($hRemoveSocket)
+		_storageGO_DestroyGroup($hRemoveSocket)
 
 	EndFunc
 
@@ -571,7 +571,7 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 		EndFunc
 
 		Func __netcode_Addon_RemoveMiddleman($sID, $nAddonID)
-			_storageG_DestroyGroup($sID)
+			_storageGO_DestroyGroup($sID)
 			__netcode_Addon_Log(1, 5, $nAddonID)
 		EndFunc
 
@@ -1069,8 +1069,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 					__netcode_Addon_RemoveFromIncomingSocketList($hSocket, $hIncomingSocket)
 
 					; tidy both
-					_storageG_DestroyGroup($arClients[$i])
-					_storageG_DestroyGroup($hIncomingSocket)
+					_storageGO_DestroyGroup($arClients[$i])
+					_storageGO_DestroyGroup($hIncomingSocket)
 
 					__netcode_Addon_Log($nAddonID, 15, $hIncomingSocket)
 
@@ -1125,8 +1125,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 					__netcode_Addon_RemoveFromRelaySocketList($hSocket, $arClients[$i])
 					__netcode_Addon_RemoveFromRelaySocketList($hSocket, $hLinkSocket)
 
-					_storageG_DestroyGroup($arClients[$i])
-					_storageG_DestroyGroup($hLinkSocket)
+					_storageGO_DestroyGroup($arClients[$i])
+					_storageGO_DestroyGroup($hLinkSocket)
 
 					__netcode_Addon_Log($nAddonID, 15, $arClients[$i])
 					__netcode_Addon_Log($nAddonID, 15, $hLinkSocket)
