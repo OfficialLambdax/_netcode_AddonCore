@@ -1,3 +1,9 @@
+18.02.2022 (DD/MM/YYYY) 0.1.2.6
+
+	Compatibility patch for the latest _storageS-UDF release, which further
+	prevents memory leaks.
+
+
 17.02.2022 (DD/MM/YYYY) 0.1.2.5
 
 	Minimalized the Memory leaks duo to the switch

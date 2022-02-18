@@ -16,7 +16,7 @@ Global $__net_Addon_bRelayLogToConsole = True
 Global $__net_Addon_bProxyLogToConsole = True
 Global $__net_Addon_bRouterLogToConsole = True
 
-Global Const $__net_Addon_sAddonVersion = "0.1.2.5"
+Global Const $__net_Addon_sAddonVersion = "0.1.2.6"
 Global Const $__net_Addon_sNetcodeTestedVersion = "0.1.5.26"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryChangelogURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF/blob/main/%23changelog%20AddonCore.txt"
@@ -69,6 +69,7 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 	; creates an empty 1D storage array. $nID could be a parent socket or a route name
 	Func __netcode_Addon_CreateSocketList(Const $nID)
+		_storageGO_CreateGroup($nID)
 		Local $arSockets[0]
 		_storageGO_Overwrite($nID, '_netcode_Addon_SocketList', $arSockets)
 	EndFunc
@@ -171,6 +172,7 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 	; only difference to the _netcode_Core.au3 variant is that this func stores the ip.
 	; _netcode_Core should also do that.
 	Func __netcode_Addon_SocketToIP(Const $hSocket)
+		If Not $hSocket Then Return False
 
 		Local $sIP = __netcode_Addon_GetVar($hSocket, 'IP')
 		if $sIP Then Return $sIP
@@ -179,7 +181,6 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 		__netcode_Addon_SetVar($hSocket, 'IP', $sIP)
 
 		Return $sIP
-
 	EndFunc
 
 #EndRegion
@@ -561,6 +562,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 				Return SetError(1, 0, False) ; middleman with this id is already known
 			EndIf
 
+			_storageGO_CreateGroup($sID)
+
 			__netcode_Addon_SetVar($sID, 'Callback', $sCallback)
 			__netcode_Addon_SetVar($sID, 'Position', $sPosition)
 
@@ -595,6 +598,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 		Func __netcode_Addon_NewIncomingMiddleman(Const $hSocket, $hIncomingSocket, $nAddonID)
 
 			__netcode_Addon_Log($nAddonID, 21, $hIncomingSocket)
+
+			_storageGO_CreateGroup($hIncomingSocket)
 
 			; inherit parents preset middlemans
 			Local $sID = __netcode_Addon_GetVar($hSocket, 'Connect')
@@ -781,6 +786,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 			Else
 				Local $hOutgoingSocket = __netcode_TCPConnect($arDestination[0], $arDestination[1], 2, True)
 			EndIf
+
+			_storageGO_CreateGroup($hOutgoingSocket)
 
 			__netcode_Addon_Log($nAddonID, 32, $arDestination[0] & ':' & $arDestination[1])
 
@@ -979,6 +986,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 			__netcode_Addon_Log($nAddonID, 10, $hIncomingSocket)
 
+			_storageGO_CreateGroup($hIncomingSocket)
+
 			; add to pending list
 			__netcode_Addon_AddToIncomingSocketList($hSocket, $hIncomingSocket)
 
@@ -987,6 +996,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 			; connect non blocking
 			Local $hOutgoingSocket = __netcode_TCPConnect($arRelayDestination[0], $arRelayDestination[1], 2, True)
+
+			_storageGO_CreateGroup($hOutgoingSocket)
 
 			; add to pending list
 			__netcode_Addon_AddToOutgoingSocketList($hSocket, $hOutgoingSocket)
