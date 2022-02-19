@@ -16,7 +16,7 @@ Global $__net_Addon_bRelayLogToConsole = True
 Global $__net_Addon_bProxyLogToConsole = True
 Global $__net_Addon_bRouterLogToConsole = True
 
-Global Const $__net_Addon_sAddonVersion = "0.1.2.6"
+Global Const $__net_Addon_sAddonVersion = "0.1.2.7"
 Global Const $__net_Addon_sNetcodeTestedVersion = "0.1.5.26"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryChangelogURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF/blob/main/%23changelog%20AddonCore.txt"
@@ -65,6 +65,10 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 	Func __netcode_Addon_GetVar(Const $nID, $sName)
 		Return _storageGO_Read($nID, '_netcode_Addon_' & $sName)
+	EndFunc
+
+	Func __netcode_Addon_DestroyVar(Const $nID, $sName)
+		Return _storageGO_DestroyVar($nID, '_netcode_Addon_' & $sName)
 	EndFunc
 
 	; creates an empty 1D storage array. $nID could be a parent socket or a route name
@@ -672,19 +676,6 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 					; if we didnt receive anything
 					if Not @extended Then ContinueLoop
-;~ 					if Not @extended Then
-
-						; check destination evaluation timeout
-;~ 						$hTimer = __netcode_Addon_GetVar($arClients[$i], 'TimeoutTimer')
-
-;~ 						If TimerDiff($hTimer) > 2000 Then ; needs to become setable
-;~ 							__netcode_Addon_Log($nAddonID, 26, $arClients[$i])
-;~ 							__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
-;~ 							ContinueLoop
-;~ 						EndIf
-
-;~ 						ContinueLoop
-;~ 					EndIf
 
 					; run the callback if we received something
 					$vMiddlemanReturn = Call($sCallback, $arClients[$i], 'Destination', $sPackage)
@@ -710,18 +701,6 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 					ElseIf $vMiddlemanReturn = False Then ; if the middleman says to disconnect
 
 						__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
-
-						ContinueLoop
-
-					ElseIf $vMiddlemanReturn = Null Then ; if no destination is known yet
-
-						; check destination evaluation timeout
-;~ 						$hTimer = __netcode_Addon_GetVar($arClients[$i], 'TimeoutTimer')
-
-;~ 						If TimerDiff($hTimer) > 2000 Then ; needs to become setable
-;~ 							__netcode_Addon_Log($nAddonID, 26, $arClients[$i])
-;~ 							__netcode_Addon_DisconnectAndRemoveClients($hSocket, $arClients[$i], False, $nAddonID)
-;~ 						EndIf
 
 						ContinueLoop
 
@@ -767,6 +746,10 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 			; [2] = Send to outgoing (needs to be of type string)
 			; [3] = Send to incoming (needs to be of type string)
 			; [4] = True / False (True = Send when outgoing is connected, False = Send imidiatly)
+
+			; destroy the connect and destination storage - no longer required
+			__netcode_Addon_DestroyVar($hIncomingSocket, 'Connect')
+			__netcode_Addon_DestroyVar($hIncomingSocket, 'Destination')
 
 			Local $nArSize = UBound($arDestination)
 
@@ -869,11 +852,21 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 					; check if there is data to send to the outgoing
 					$sData = __netcode_Addon_GetVar($arClients[$i], 'MiddlemanSend')
-					if $sData Then __netcode_TCPSend($arClients[$i], StringToBinary($sData), False)
+					if $sData Then
+						__netcode_TCPSend($arClients[$i], StringToBinary($sData), False)
+						__netcode_Addon_DestroyVar($arClients[$i], 'MiddlemanSend')
+					EndIf
 
 					; check if there is data to send to the incoming
 					$sData = __netcode_Addon_GetVar($hIncomingSocket, 'MiddlemanSend')
-					if $sData Then __netcode_TCPSend($hIncomingSocket, StringToBinary($sData), False)
+					if $sData Then
+						__netcode_TCPSend($hIncomingSocket, StringToBinary($sData), False)
+						__netcode_Addon_DestroyVar($hIncomingSocket, 'MiddlemanSend')
+					EndIf
+
+					; remove timer
+					__netcode_Addon_DestroyVar($arClients[$i], 'TimeoutTimer')
+					__netcode_Addon_DestroyVar($hIncomingSocket, 'TimeoutTimer')
 
 					__netcode_Addon_Log($nAddonID, 33, $hIncomingSocket, $arClients[$i])
 
