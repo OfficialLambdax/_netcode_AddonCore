@@ -16,7 +16,7 @@ Global $__net_Addon_bRelayLogToConsole = True
 Global $__net_Addon_bProxyLogToConsole = True
 Global $__net_Addon_bRouterLogToConsole = True
 
-Global Const $__net_Addon_sAddonVersion = "0.1.2.7"
+Global Const $__net_Addon_sAddonVersion = "0.1.2.8"
 Global Const $__net_Addon_sNetcodeTestedVersion = "0.1.5.26"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryChangelogURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF/blob/main/%23changelog%20AddonCore.txt"
@@ -73,70 +73,42 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 	; creates an empty 1D storage array. $nID could be a parent socket or a route name
 	Func __netcode_Addon_CreateSocketList(Const $nID)
+
+		_storageOL_CreateGroup($nID)
 		_storageGO_CreateGroup($nID)
-		Local $arSockets[0]
-		_storageGO_Overwrite($nID, '_netcode_Addon_SocketList', $arSockets)
+
+;~ 		Local $arSockets[0]
+;~ 		_storageGO_Overwrite($nID, '_netcode_Addon_SocketList', $arSockets)
 	EndFunc
 
 	; disconnects all sockets and cleans the vars
 	Func __netcode_Addon_WipeSocketList(Const $nID)
-		Local $arSockets = __netcode_Addon_GetSocketList($nID)
+
+		Local $arSockets = _storageOL_GetElements($nID)
 		If Not IsArray($arSockets) Then Return
 
-		Local $nArSize = UBound($arSockets)
-		For $i = 0 To $nArSize - 1
+		For $i = 0 To UBound($arSockets) - 1
 			__netcode_TCPCloseSocket($arSockets[$i])
 			_storageGO_DestroyGroup($arSockets[$i])
 		Next
 
-		_storageGO_DestroyGroup($nID)
-	EndFunc
+		_storageOL_DestroyGroup($nID)
 
-	Func __netcode_Addon_SetSocketList(Const $nID, $arSockets)
-		_storageGO_Overwrite($nID, '_netcode_Addon_SocketList', $arSockets)
 	EndFunc
 
 	Func __netcode_Addon_GetSocketList(Const $nID)
-		Return _storageGO_Read($nID, '_netcode_Addon_SocketList')
+		Return _storageOL_GetElements($nID)
+
 	EndFunc
 
 	; adds the socket to the socket list
 	Func __netcode_Addon_AddToSocketList(Const $nID, $hSocket)
-		Local $arSockets = __netcode_Addon_GetSocketList($nID)
-		If Not IsArray($arSockets) Then Return False
-
-		Local $nArSize = UBound($arSockets)
-		ReDim $arSockets[$nArSize + 1]
-		$arSockets[$nArSize] = $hSocket
-
-		__netcode_Addon_SetSocketList($nID, $arSockets)
-
-		Return True
+		Return _storageOL_AddElement($nID, $hSocket)
 	EndFunc
 
 	; dont tidy the removed socket vars as they are maybe still used
 	Func __netcode_Addon_RemoveFromSocketList(Const $nID, $hSocket)
-		Local $arSockets = __netcode_Addon_GetSocketList($nID)
-		If Not IsArray($arSockets) Then Return False
-
-		Local $nArSize = UBound($arSockets)
-		Local $nIndex = -1
-
-		For $i = 0 To $nArSize - 1
-			if $arSockets[$i] = $hSocket Then
-				$nIndex = $i
-				ExitLoop
-			EndIf
-		Next
-
-		if $nIndex = -1 Then Return False
-
-		$arSockets[$nIndex] = $arSockets[$nArSize - 1]
-		ReDim $arSockets[$nArSize - 1]
-
-		__netcode_Addon_SetSocketList($nID, $arSockets)
-
-		Return True
+		Return _storageOL_RemoveElement($nID, $hSocket)
 	EndFunc
 
 	Func __netcode_Addon_RecvPackages(Const $hSocket)
