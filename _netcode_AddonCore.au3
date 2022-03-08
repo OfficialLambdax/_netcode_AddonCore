@@ -16,8 +16,8 @@ Global $__net_Addon_bRelayLogToConsole = True
 Global $__net_Addon_bProxyLogToConsole = True
 Global $__net_Addon_bRouterLogToConsole = True
 
-Global Const $__net_Addon_sAddonVersion = "0.1.2.8"
-Global Const $__net_Addon_sNetcodeTestedVersion = "0.1.5.26"
+Global Const $__net_Addon_sAddonVersion = "0.1.2.9"
+Global Const $__net_Addon_sNetcodeTestedVersion = "0.1.5.27"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryChangelogURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF/blob/main/%23changelog%20AddonCore.txt"
 Global Const $__net_Addon_sNetcodeVersionURL = "https://raw.githubusercontent.com/OfficialLambdax/_netcode-UDF/main/versions/_netcode_AddonCore.version"
@@ -77,8 +77,6 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 		_storageOL_CreateGroup($nID)
 		_storageGO_CreateGroup($nID)
 
-;~ 		Local $arSockets[0]
-;~ 		_storageGO_Overwrite($nID, '_netcode_Addon_SocketList', $arSockets)
 	EndFunc
 
 	; disconnects all sockets and cleans the vars
