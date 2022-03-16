@@ -74,7 +74,7 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 	; creates an empty 1D storage array. $nID could be a parent socket or a route name
 	Func __netcode_Addon_CreateSocketList(Const $nID)
 
-		_storageOL_CreateGroup($nID)
+		_storageOLi_CreateGroup($nID)
 		_storageGO_CreateGroup($nID)
 
 	EndFunc
@@ -82,7 +82,7 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 	; disconnects all sockets and cleans the vars
 	Func __netcode_Addon_WipeSocketList(Const $nID)
 
-		Local $arSockets = _storageOL_GetElements($nID)
+		Local $arSockets = _storageOLi_GetElements($nID)
 		If Not IsArray($arSockets) Then Return
 
 		For $i = 0 To UBound($arSockets) - 1
@@ -90,23 +90,23 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 			_storageGO_DestroyGroup($arSockets[$i])
 		Next
 
-		_storageOL_DestroyGroup($nID)
+		_storageOLi_DestroyGroup($nID)
 
 	EndFunc
 
 	Func __netcode_Addon_GetSocketList(Const $nID)
-		Return _storageOL_GetElements($nID)
+		Return _storageOLi_GetElements($nID)
 
 	EndFunc
 
 	; adds the socket to the socket list
 	Func __netcode_Addon_AddToSocketList(Const $nID, $hSocket)
-		Return _storageOL_AddElement($nID, $hSocket)
+		Return _storageOLi_AddElement($nID, $hSocket)
 	EndFunc
 
 	; dont tidy the removed socket vars as they are maybe still used
 	Func __netcode_Addon_RemoveFromSocketList(Const $nID, $hSocket)
-		Return _storageOL_RemoveElement($nID, $hSocket)
+		Return _storageOLi_RemoveElement($nID, $hSocket)
 	EndFunc
 
 	Func __netcode_Addon_RecvPackages(Const $hSocket)
