@@ -16,7 +16,7 @@ Global $__net_Addon_bRelayLogToConsole = True
 Global $__net_Addon_bProxyLogToConsole = True
 Global $__net_Addon_bRouterLogToConsole = True
 
-Global Const $__net_Addon_sAddonVersion = "0.1.2.10"
+Global Const $__net_Addon_sAddonVersion = "0.1.2.11"
 Global Const $__net_Addon_sNetcodeTestedVersion = "0.1.5.27"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF"
 Global Const $__net_Addon_sNetcodeOfficialRepositoryChangelogURL = "https://github.com/OfficialLambdax/_netcode_AddonCore-UDF/blob/main/%23changelog%20AddonCore.txt"
@@ -135,7 +135,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 			$nLen += @extended
 			$sPackages &= BinaryToString($sTCPRecv)
 
-			if TimerDiff($hTimer) > 20 Then ExitLoop
+			if TimerDiff($hTimer) > 2000 Then ExitLoop
+;~ 			if TimerDiff($hTimer) > 20 Then ExitLoop
 
 		Until $sTCPRecv = ''
 
@@ -503,6 +504,10 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 		Return __netcode_Addon_GetVar($hSocket, 'SocketIs')
 	EndFunc
 
+	Func __netcode_Addon_IsIncoming($hSocket)
+		Return (__netcode_Addon_GetSocketType($hSocket) == "Incoming") ? True : False
+	EndFunc
+
 	Func __netcode_Addon_DisconnectAndRemoveClient(Const $hSocket, $hRemoveSocket, $nAddonID)
 
 		__netcode_Addon_Log($nAddonID, 99, $hRemoveSocket)
@@ -595,6 +600,7 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 
 			; add to IncomingPending list if no destination is yet set
 			If IsArray($vMiddlemanReturn) Then
+				__netcode_Addon_SetVar($hIncomingSocket, 'SocketIs', "Incoming") ; fixes a bug that happens when the middleman gives back this array
 				__netcode_Addon_ConnectOutgoingMiddleman($hSocket, $hIncomingSocket, $vMiddlemanReturn, $sID, 1)
 			ElseIf $vMiddlemanReturn == False Then ; must be == because If "" = False Then is True
 				__netcode_Addon_DisconnectAndRemoveClients($hSocket, $hIncomingSocket, False, $nAddonID)
@@ -917,7 +923,8 @@ __netcode_UDFVersionCheck($__net_Addon_sNetcodeVersionURL, $__net_Addon_sNetcode
 					; get middleman callback
 					$sCallback = __netcode_Addon_GetVar(__netcode_Addon_GetVar($hLinkSocket, 'Between'), 'Callback')
 					If $sCallback Then
-						$sData = Call($sCallback, $hLinkSocket, $arClients[$i], __netcode_Addon_GetSocketType($hLinkSocket), $sData, $nLen)
+;~ 						$sData = Call($sCallback, $hLinkSocket, $arClients[$i], __netcode_Addon_GetSocketType($hLinkSocket), $sData, $nLen)
+						$sData = Call($sCallback, $hLinkSocket, $arClients[$i], __netcode_Addon_IsIncoming($hLinkSocket), $sData, $nLen)
 
 						; if either the call failed or if the middleman sais it doesnt want to forward the packet
 						if @error Then

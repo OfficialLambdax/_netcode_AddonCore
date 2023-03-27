@@ -1,3 +1,14 @@
+28.03.2023 (DD/MM/YYYY) 0.1.2.11
+
+	Fixed
+		- __netcode_Addon_RecvAndSendMiddleman() not giving a bool to the between middleman for the $bSendingSocketIsIncoming param
+
+
+	Changed
+		- __netcode_Addon_RecvPackages() no longer quits receiving data when the function takes longer then 20ms to complete, but now quits after 2000ms.
+		This change is performed to increase compatibility with software that dont perform incomplete packet checks.
+		
+
 16.03.2022 (DD/MM/YYYY) 0.1.2.10
 
 	Fixed
